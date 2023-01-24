@@ -1,7 +1,5 @@
 # About
 
-![daloradius_logo][daloRADIUS_Logo]
-
 [daloRADIUS](http://www.daloradius.com) is an advanced RADIUS web management application aimed at managing hotspots and
 general-purpose ISP deployments. It features user management, graphical reporting, accounting,
 a billing engine and integrates with GoogleMaps for geo-locating.
@@ -34,271 +32,482 @@ Thanks goes to these wonderful people :
 	</tr></table>
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-# Requirements
+# Instalacion de daloradius en Almalinux/Rocky optare por Almalinux en AWS
+- Se necesita un vps con Almalinux instalado
+- Access para impresion de fichas
+- Mysql Workbench para checar tiempos y exportar las fichas/vouchers a excel
+	-  Se realizara una instalacion limpia en almalinux, si la instancia se conecta por ssh solamente, se le otorgara acceso por usuario/contraseña root para poder administrar desde Mysql Workbench la base de datos y exportarla a excel. (Access y Mysql workbench se usa para checar los usuarios en tiempos e imprimir las fichas/vouchers)
+-En este tutoria se utilizara en vez del puerto 22 el puerto 6813 para acceso por ssh, por lo que debera abrirse en la administracion del vps, aunque alternativamente puedes usar el 22 solamente ignora la parte del cambio de puerto.
+- Creacion de perfiles y planes tiempos ; Perfiles/grupos= manejo de tiempos de usuario, plan=costos del perfil o ficha individual,conteo.
+	- 2 Horas Pausadas
+	- 12 Horas Corridas
+	- Cliente-mensual recurrente
+	- Cliente ppoe
+- Acceso por Mysql Workbench a la base de datos y exportacion de un lote de fichas a excel.
+- Impresion del lote de fichas importadas desde Mysql Workbench -->excel--> Access.
+- Contraseña usada en este tutorial para root,mysql y archivo daloradius.conf.php es *84Uniq@*.
 
- * Apache.
- * PHP v5.5 or higher.
- * MySQL v4.1 or higher.
- * [PEAR](https://pear.php.net/) PHP extension.
- * PEAR package DB in order to access the database. To install it, execute at the command line:
+# Acceso root con usuario y contraseña en instancia AWS.
+
+ * Instalamos nano
+ ```
+ sudo yum install nano
+ ```
+ * En el archivo **/etc/cloud/cloud.cfg** agregar el usuario *root*
+ ```
+ nano /etc/cloud/cloud.cfg
+ ```
+ *Agregamos el usuario root*
+ ```
+ users:
+   - default
+   - root
+ ```
+ * Modificar las lineas siguientes, deben quedar asi.
+ ```
+ disable_root: false
+ ssh_pwauth:   true
+ ```
+## Cambio del puerto 22 a 6813 
+* Editar el archivo */etc/ssh/sshd_config* y colocar/modificar las lineas a:
+```
+nano /etc/ssh/sshd_config
+```
+*Modificamos el archivo a:*
+```
+Port 6813 
+PasswordAuthentication yes
+PermitRootLogin yes
+```
+## Reglas de firewall para el puerto 6813
+* Instalacion paquete necesario firewalld
+```
+dnf install firewalld -y
+systemctl enable --now firewalld
+```
+* Puerto a abrir 6813
+```
+semanage port -a -t ssh_port_t -p tcp 6813
+firewall-cmd --zone=public --add-port=6813/tcp --permanent
+```
+* Checar que la linea del archivo */etc/firewalld/firewalld.conf* queden en no.
+`nano /etc/firewalld/firewalld.conf`
+*Dentro buscar la linea AllowZoneDrifting=yes y cambiarla a no*
+```
+AllowZoneDrifting=no
+```
+* Reiniciar servicio firewalld y sshd
+```
+systemctl restart firewalld
+firewall-cmd --reload
+systemctl restart sshd
+```
+
+* Colocarle contraseña al usuario root
+```
+sudo su
+passwd root
+sudo service sshd restart
+```
+* Ingresar desde el PC con
+```
+ssh -p6813 root@IP
+```
+* Borrar la parte de la ssh que no se usara ,todo antes de ssh-rsa de la clave ssh, ya que eso impide el acceso por ssh con la clave de acceso.
+```
+cd .ssh
+nano autorized_keys
+```
+* Guardar y reiniciar con
+```
+sudo service sshd restart
+```
+# Opcional eliminacion de kernel antiguo para liberar espacio en filesystem.
+```
+package-cleanup --oldkernels --count=1
+```
+# Actualizacion, selinux permisivo y paquetes a instalar
+```
+dnf update
+setenforce 0
+sed -i 's/^SELINUX=.*/SELINUX=permissive/g' /etc/selinux/config
+dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+dnf install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm
+```
+* Instalacion de modulos php,httpd,cli,curl....
+```
+dnf module enable php:remi-7.4
+dnf -y install @httpd @php
+dnf -y install php-{cli,curl,mysqlnd,devel,gd,pear,mbstring,xml,pear}
+dnf install firewalld -y
+```
+* Instalacion de PEAR, DB y MDB2
+```
+sudo pear install DB
+sudo pear install MDB2
+pear channel-update pear.php.net
+```
+* Activacion de servicios httpd php firewalld
+```
+systemctl enable --now httpd php-fpm
+systemctl enable --now firewalld
+```
+* Agregar servicios http https radius ntp
+```
+firewall-cmd --add-service={http,https,radius,ntp} --permanent
+firewall-cmd --reload
+```
+* Instalacion y activacion de servicio Mariadb
+```
+dnf module install mariadb
+systemctl enable --now mariadb
+```
+* Agregar contraseña a Mysql, cuando pregunte si se dea permitir remotamente colocar *y* de yes, la contraseña usada en este tutorial es *84Uniq@*.
+```
+mysql_secure_installation
+# acceso remoto --- > y
+# password usada aqui es 84Uniq@
+```
+* creacion de db aqui la contraseña que use es *84Uniq@* procura cambiarla
+```
+mysql -u root -p
+CREATE DATABASE radius;
+GRANT ALL ON radius.* TO radius@localhost IDENTIFIED BY "84Uniq@";
+FLUSH PRIVILEGES;
+quit;
+```
+# Instalacion y configuracion de freeradius
+* Instalamos los siguientes paquetes y activamos, tambien creamos un acceso simbolico
+```
+dnf install -y @freeradius freeradius-utils freeradius-mysql
+```
+```
+systemctl enable --now radiusd
+mysql -u root -p radius < /etc/raddb/mods-config/sql/main/mysql/schema.sql
+ln -s /etc/raddb/mods-available/sql /etc/raddb/mods-enabled/
+```
+* Creamos un backup del sql ya que lo remplazaremos por el que ya tengo, igualmente puedes usarlo y modificar los datos como el mio.
+```
+cp /etc/raddb/mods-available/sql /etc/raddb/mods-available/sql.bk
+```
+* Para remplazar los archivos por los del tutorial, debemos descargar una carpeta que los contiene 
+```
+git clone git@github.com:apwifimx/daloup.git
+```
+* Remplazamos el archivo *sql* 
+```
+\mv /root/daloup/sql /etc/raddb/mods-available/sql
+```
+* Aplicamos permisos y reiniciamos servicio
+```
+chgrp -h radiusd /etc/raddb/mods-enabled/sql
+systemctl restart radiusd
+```
+# Instalacion y configuracion de Daloradius
+
+```
+git clone git@github.com:apwifimx/daloradius.git
+```
+* Descomprimimos con
+```
+tar -xf daloradius.tar.gz
+```
+* Entramos a la carpeta
+```
+cd daloradius
+```
+* Lanzamos los siguientes comandos recordando la contraseña que le pusimos.
+```
+mysql -u root -p radius < contrib/db/fr2-mysql-daloradius-and-freeradius.sql
+```
+* Despues este otro
+```
+mysql -u root -p radius < contrib/db/mysql-daloradius.sql
+```
+* Salimos a una carpeta anterior con
+```
+cd ..
+```
+* Movemos el directorio a /var/www/html
+```
+mv daloradius /var/www/html/
+```
+* Copiamos uno de los archivos que descargamos, recuerda cambiarle el password por el tuyo el usado en este archivo es *84Uniq@*.
+```
+\mv /root/daloup/daloradius.conf.php /var/www/html/daloradius/library/daloradius.conf.php
+```
+* Aplicamos permisos y reiniciamos servicio
+```
+chown -R apache:apache /var/www/html/daloradius/
+chmod 664 /var/www/html/daloradius/library/daloradius.conf.php
+systemctl restart radiusd.service httpd
+```
+* Cambiar el timezone al que usaremos, tambien instalamos chrony
+```
+dnf install chrony -y
+systemctl enable --now chronyd
+firewall-cmd --permanent --add-service=ntp
+firewall-cmd --reload
+timedatectl set-timezone America/Mexico_City
+```
+* Instalamos php-dba y policycoreutils
+```
+dnf install -y policycoreutils-python-utils
+semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/daloradius(/.*)?"
+restorecon -Rv /var/www/html/daloradius
+dnf -y install php-dba
+```
+* Aplicamos permisos a unos directorios necesarios de logs y creamos uno nuevo tambien
+```
+chmod 755 /var/log/radius/
+chmod 644 /var/log/radius/radius.log
+chmod 644 /var/log/messages
+#chmod 644 /var/log/dmesg
+touch /tmp/daloradius.log
+```
+* el archivo radiusd.conf , yo le hare backup y colocare el mio
+```
+cp /etc/raddb/radiusd.conf /etc/raddb/radiusd.conf.bk
+\mv /root/daloup/radiusd.conf /etc/raddb/radiusd.conf
+```
+* Modificamos el archivo /etc/raddb/sites-enabled/default  yo le colocare el que descargue
+```
+cp /etc/raddb/sites-enabled/default /etc/raddb/sites-enabled/default.bk
+\mv /root/daloup/default /etc/raddb/sites-enabled/default
+```
+
+* Modificamos el archivo  /etc/raddb/mods-available/sqlcounter ,yo le pondre el que descargue.
+```
+cp /etc/raddb/mods-available/sqlcounter /etc/raddb/mods-available/sqlcounter.bk
+\mv /root/daloup/sqlcounter /etc/raddb/mods-available/sqlcounter
+```
+* Modificar el archivo /etc/raddb/mods-config/sql/counter/mysql/access_period.conf o colocarle el que he subido
+```
+cp /etc/raddb/mods-config/sql/counter/mysql/access_period.conf /etc/raddb/mods-config/sql/counter/mysql/access_period.conf.bk
+\mv /root/daloup/access_period.conf /etc/raddb/mods-config/sql/counter/mysql/access_period.conf
+```
+* Modificar el archivo /etc/raddb/mods-config/sql/counter/mysql/quotalimit.conf o colocarle el descargado
+```
+cp /etc/raddb/mods-config/sql/counter/mysql/quotalimit.conf /etc/raddb/mods-config/sql/counter/mysql/quotalimit.conf.bk
+\mv /root/daloup/quotalimit.conf /etc/raddb/mods-config/sql/counter/mysql/quotalimit.conf
+```
+* Modificar el archivo /etc/raddb/mods-enabled/radutmp o pasarle el descargado...
+```
+cp /etc/raddb/mods-enabled/radutmp /etc/raddb/mods-enabled/radutmp.bk
+\mv /root/daloup/radutmp /etc/raddb/mods-enabled/radutmp
+```
+* Modificar el archivo  /etc/raddb/mods-config/sql/main/mysql/queries.conf o colocarle el descargado
+```
+cp /etc/raddb/mods-config/sql/main/mysql/queries.conf /etc/raddb/mods-config/sql/main/mysql/queries.conf.bk
+\mv /root/daloup/queries.conf /etc/raddb/mods-config/sql/main/mysql/queries.conf
+```
+* Modificar el archivo php.conf o enviar el propio
+```
+cp /etc/httpd/conf.d/php.conf /etc/httpd/conf.d/php.conf.bk
+\mv /root/daloup/php.conf /etc/httpd/conf.d/php.conf
+```
+* En radius.service comentar *ExecStartPre=-/bin/sh /etc/raddb/certs/bootstrap* colocarle un #
+```
+nano /usr/lib/systemd/system/radiusd.service
+```
+* Importante subir esquema de la base de datos ---->>>
+```
+cd daloup
+```
+* Enviar sql descargado importante
+```
+mysql -u root -p radius < base.sql
+```
+* Iniciar servicio
+```
+systemctl status radiusd
+systemctl start radiusd
+```
+* Para analisis puede usar
+```
+systemctl status radiusd
+systemctl stop radiusd
+radiusd -X
+systemctl start radiusd
+```
+
+# Respaldar directorio /var/www/html/daloradius
+```
+cd /var/www/html
+tar -zcvf daloradius.tar.gz daloradius
+```
+* Descomprimir con
+```
+cd /var/www/html
+tar -xf daloradius.tar.gz
+```
+* Acceso por medio de la interfaz web a daloradius
+```
+http://IP/daloradius/index.php
+USUARIO= administrator
+PASSWORD= radius
+```
+# Agregar memoria swap de 8Gb
+```
+sudo fallocate -l 8G /swapfile
+ls -lh /swapfile
+sudo chmod 600 /swapfile
+ls -lh /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+sudo swapon --show
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf
+sudo sysctl vm.swappiness=10
+sudo sysctl vm.vfs_cache_pressure=50
+echo 'vm.vfs_cache_pressure=50' | sudo tee -a /etc/sysctl.conf
+top
+```
+# Acceder por ssh con usuario y contraseña con el puerto 6813
+```
+ssh -p6813 root@IP 
+```
+# Conexion por MYSQL workbench con los datos de este tutorial
+- instalar mysql workbench
+```
+standar tcp/ip over ssh
+IP:6813
+ssh username= root 
+ssh password= 84Uniq@
+mysql hostname= 127.0.0.1
+mysql server port=3306
+username=root   
+default schrema=radius 
+```
+
+# Creacion de perfiles/grupos y planes
+### 2 HORAS TIEMPO PAUSADO==========> NOMBRE DEL PERFIL/GRUPO= 2HPAUSADO
+        
+        LOS ATRIBUTOS SON DEFINIDOS EN EL PERFIL 
+        -    Max-All-Session  <check> = TIEMPO DEL VOUCHER EN SEGUNDOS 2HRS=7200
+        -    WISPr-Bandwidth-Max-Up <Reply> = VELOCIDAD DE SUBIDA
+        -    WISPr-Bandwidth-Max-Down <Reply> = VELOCIDAD DE BAJADA
+        -    PARA CONTABILIDAD LLEVA UN PLAN ,AL CREAR LOS VOUCHERS SE SELECCIONA EL PLAN
+
+### 12 HORAS TIEMPO CORRIDO==========>NOMBRE DEL PERFIL/GRUPO= 12HCORRIDO
+
+        LOS ATRIBUTOS SON DEFINIDOS EN EL PERFIL
+        - Access-Period <Check> = TIEMPO DEL VOUCHER EN SEGUNDOS 12HRS=43200
+        -    WISPr-Bandwidth-Max-Up <Reply> = VELOCIDAD DE SUBIDA
+        -    WISPr-Bandwidth-Max-Down <Reply> = VELOCIDAD DE BAJADA
+        -    PARA CONTABILIDAD LLEVA UN PLAN ,AL CREAR LOS VOUCHERS SE SELECCIONA EL PLAN
+
+### VOUCHER MENSUAL / PERSONALIZADO   =========> NOMBRE DEL PERFIL/GRUPO = MENSUAL
+
+        SON CLIENTES MENSUALES QUE PUEDEN SER RECURRENTES, O SE LES PUEDE AGREGAR POR DIAS
+        - ATRIBUTOS EN EL PERFIL SON.
+                -    WISPr-Bandwidth-Max-Up <Reply> = VELOCIDAD DE SUBIDA
+                -    WISPr-Bandwidth-Max-Down <Reply> = VELOCIDAD DE BAJADA
+        - LOS ATRIBUTOS A CADA VOUCHER PERSONALIZADO POR EJEMPLO HOY ES 21/01/2023 Y QUIERO DARLE 15 DIAS.
+        > NUEVO USUARIO 
+        > NOMBRE = PRUEBA15 
+        > CONTRASEÑA=123 
+        > GRUPO= MENSUAL
+        >> ATRIBBUTES > CUSTOM ATRIBUTE
+        - WISPr-Session-Terminate-Time <Reply> = 2023-02-06T11:00:00
+        - EL USUARIO SE LE TERMINARA EL ACCESO EL DIA 06/02/2023 A LAS 11:00 AM.
+        - SI DESEO MODIFICAR LA FECHA SOLO BUSCO EL USUARIO Y MODIFICO EL ATRIBUTO.
+        - PARA CONTABILIDAD NO LLEVA UN PLAN, NO SE LLEVA CONTROL YA QUE SON MANUALES Y RECURRENTES.
+
+### CLIENTE PPOE
+
+        LOS ATRIBUTOS SON.
+        -    Mikrotik-Rate-Limit <rEPLY> = VELOCIDAD DE CONEXION
+        -    Framed-Protocol = PPP
+        AL CREAR EL USUARIO SE COLOCA
+        -    Expiration <Check> = FECHA DE EXPIRACION = 10 Feb 2023
+        -    Framed-Pool <Reply> = TIPO = pool_pppoe
+
+* Prueba hacer un lote con uno de los perfiles.
+* Prueba Agregar un NAS mikrotik, solo se realiza una vez
+   - managment>NAS>new nas
    ```
-   pear install DB
-   ```
- * PEAR packages Mail and Mail_Mime to send notifications by email. To install them, execute at the command line:
-   ```
-   pear install -a Mail
-   pear install -a Mail_Mime
-   ```
-
-More details about installation and requirements can be found if needed on the (maybe very old) files:
-
- * INSTALL
- * INSTALL.openSUSE
- * INSTALL.quick
- * INSTALL.win
- * FAQS
-
-# Documentation
-
-You can find some documentation in the `doc` directory.
-
-
-
-# daloRADIUS Book
-
-Liran Tal authored a book about working with daloRADIUS covering most aspects through the UI, including setting up a captive portal system.
-## Amazon Paperback Book
-The paperback book version is available through Amazon at http://www.amazon.com/daloRADIUS-User-Guide-Volume-1/dp/1463752199
-
-![daloradius_book][daloRADIUS_Book]
-## PDF Digital Book
-There is also a digital version of the book via PDF, available at: https://lirantal.selz.com/
-
-
-
-# Features
-
-## Management
-### User Management
-
-    * List Users
-    * Create New User
-    * Create New User - Quick add
-      easy to use for POS or HotSpot shops
-    * Edit User
-    * Search User
-    * Delete User
-
-![daloradius_logo][daloRADIUS_Feature_Management]
-
-## HotSpot Management
-
-    * List HotSpots
-    * Create New HotSpot
-    * Edit HotSpot
-    * Delete HotSpot
-
-
-
-## NAS Management
-
-    * List NAS
-    * Create New NAS
-    * Edit NAS
-    * Delete NAS
-
-
-
-## Groups Management
-
-    * List, Create New, Edit and Delete User-Groups Mapping
-      usergroup table in radius database
-    * List, Create New, Edit and Delete Group-Reply and Group-Check Settings
-      radgroupreply and radgroupcheck tables in radius database for managing group-wide attributes
-
-
-
-
-## Accounting
-### Users Accounting By
-
-    * Username
-    * IP Address
-    * NAS IP Address
-    * Date (From/To)
-    * Display of All Accounting records
-      the entire content of the radacct table in the radius database
-    * Display of Active Accounting records
-      performed by an algorithm implemented by daloRADIUS itself to calculate if
-      an account has expired or not based on it's Max-All-Session attribute or Expiration attribute
-	* Custom Accounting Query
-
-
-### HotSpots Accounting
-
-    * Comparison of Accounting for different HotSpots
-      provides information on hotspot's unique users, total hits, average time and total time
-
-![daloradius_logo][daloRADIUS_Feature_Accounting]
-
-
-
-### GIS - Geographical Information System
-
-	daloRADIUS comes with integrated support for GIS provided by
-	Leaflet and CARTO basemap thus
-	provides the ability to visually locate deployed HotSpots across a map, see their status,
-	and monitor them visually.
-
-	* View Map
-	  Provides functionality of monitoring deployed HotSpots
-
-	* Edit Map
-	  Provides functionality for adding or deleting HotSpots from within the map itself
-	  (i.e: no need to go to HotSpots Management page and delete or create a new one there)
-
-
-
-## Reporting
-
-
-### Basic Reporting
-
-    * Online Users
-      View Online users, users that are connected to the system from all NASes at a current
-      point in time.
-    * Last Connection Attempts
-      View last connection attempts and their status - whether they were rejected or successful
-    * Search Users
-      Search for Users - similar to the functionality in User Management page
-    * Top Users
-      View a report of the Top Users based on their Bandwidth consumption or Time usage
-
-
-
-### Logs Reporting
-
-    * daloRADIUS Log
-      daloRADIUS keeps a log file for all the actions it performs itself (viewing pages,
-      form actions like deleting users, creating new hotspots, queries submission as in
-      performing user accounting and more)
-    * RADIUS Server Log
-      Provides monitoring of the freeradius server logfile
-    * System Log
-      Provides monitoring of the system log, being syslog or messages, depends.
-    * Boot Log
-      Provides monitoring of the boot/kernel log (dmesg)
-
-
-
-### Status Reporting
-
-    * Server Status
-      Provides detailed information on the server daloRADIUS is deployed.
-      Information such as CPU utilization, uptime, memory, disks information, and more.
-    * RADIUS Status
-      Provides information whether the freeradius server is running along with the database
-      server (mysql, postgresql, or others)
-
-
-
-## Billing
-
-    * POS (Point of Sales)
-	* Plans
-	* Rates
-	* PayPal Transactions
-	* Billing History
-	* Invoices
-	* Payments
-
-
-
-## Graphs
-
-### Users Graphs
-Provides visual graphs and statistical listing per user connection's attributes, being:
-
-    * Logins/Hits
-    * Download
-    * Upload
-
-
-### Server-Wide Graphs
-Provides visual graphs and statistical listing for the entire server, all-time information on:
-
-    * Logins/Hits
-    * Traffic Comparison
-
-
-
-
-## Configuration
-
-### Global Configuration
-
-    * Database Settings
-      Database connection information (storage: mysql, postgresql and others),
-      credentials (username and password), radius database tables names (radcheck, radacct, etc),
-      and database password encryption type (none, md5, sha1)
-    * Language Settings
-      daloRADIUS is multi-lingual and supports currently English and Russian language packs
-    * Logging Settings and Debugging
-      Logging of different actions, queries and page visiting performed on different pages.
-      Also supports debugging of SQL queries executed.
-    * Interface Settings
-      Support for displaying password text in either clear-text or as asterisks to hide it.
-      Table listing spanning across multiple pages is configurable on number of rows per page
-      and addition of numbers links for quick-access to different pages.
-
-
-### Maintenance
-
-    * Test User Connectivity
-      Provides the ability to check if a user's credentials (username and password) are valid by
-      executing a radius query to a radius server (configurable for radius port, shared secret, etc)
-	* Disconnect User
-	  Supply a username and send a PoD (Packet of Disconnect) or CoA (Change of Authority) packet
-	  to the NAS to disconnect the user.
-
-### Operators
-
-daloRADIUS supports Operators for complete management of the entire platform.
-Different Operators can be added with their contact information and ACLs settings to
-grant or revoke them of permissions to access different pages.
-
-    * List Operators
-    * Create New Operator
-    * Edit Operator
-    * Delete Operator
-
-
-
-# Credits
-
- [daloRADIUS](http://www.daloradius.com) makes use of several third-party packages and I would like to thank these
- great tools and their authors for releasing such a good software to the community.
-
- * datepicker PHP class	- Stefan Gabos <ix@nivelzero.ro>
- * libchart PHP class	- Jean-Marc Trémeaux <jm.tremeaux@gmail.com>
- * icons collection - Mark James of famfamfam.com icons <mjames@gmail.com>
- * ajax auto complete - Batur Orkun <batur@bilkent.edu.tr>
- * dhtml-Suite - Magne Kalleland <post@dhtmlgoodies.com>
- * dompdf - [https://github.com/dompdf](https://github.com/dompdf)
-
-
-
-# Support
-
-Helpful resources to find help and support with daloRADIUS:
-
- * *Official daloRADIUS Website*: http://www.daloradius.com
- * SourceForge hosted forums area: https://sourceforge.net/p/daloradius/discussion/
- * *Mailing List*: daloradius-users@lists.sourceforge.net and register here to post there: https://lists.sourceforge.net/lists/listinfo/daloradius-users
- * Facebook's daloRADIUS related group: https://www.facebook.com/groups/551404948256611/
-
-
-
+  NAS IP/Host 0.0.0.0/0
+  NAS Secret 84Uniq@
+  NAS Type other
+  NAS Shortname mikrotik
+  ```
+  - Managment >Hotspot  para agregar cada mikrotik
+  - new hotspot
+  ```
+  Hotspot Name hAP
+  MAC Address (es la mac ether1 en este caso de la wan donde recibe internet el mikrotik)
+  ```
+  * Prueba usar una ficha/voucher en el wifi mikrotik.
+# IMPRESION DE VOUCHERS CON ACCESS EN WINDOWS
+- USAR ACCESS CON EL ARCHIVO LOTES.ZIP.
+
+## BUSCAR EL ID CORRESPONDIENTE AL LOTE X EN WORKBENCH
+- EN WORKBENCH ---> CONECTAR DB ---> RESUMEN --->CALENDAR CON RAYO
+- COLOCAR
+```
+SELECT * FROM radius.resumen;
+```
+- CHECAR EL ID POR EJEMPLO 26
+## EXPORTAR LISTA DE FICHAS / VOUCHERS DE ESE LOTE
+- EN WORKBENCH ---> CONECTAR DB ---> FICHAS --->CALENDAR CON RAYO
+```
+SELECT * FROM radius.fichas
+where id in (26)
+```
+- DARLE CLICK EN RAYO 
+- EXPORTARLAS A EXCEL
+- COPIARLAS Y COLOCARLAS EN EL ACCESS PARA IMPRIMIR.
+
+# BACKUP BASE DE DATOS MANUALMENTE
+```
+mysqldump -u root -p radius > base.sql
+```
+### RESTAURAR BASE DE DATOS
+```
+mysql -u root -p radius < base.sql
+```
+# BACKUP BASE DE DATOS AUTOMATICO Y CRONTAB
+suponiendo que la carpeta es /root/backupdb/db.sh
+```
+mkdir backupdb
+cd backupdb
+nano db.sh
+```
+- Dentro de el archivo db.sh introducir lo siguiente, cambiando tu usuario y contraseña.
+```
+username=root
+password=84Uniq@
+database=radius
+now="$(date +'%d_%m_%Y_%H_%M_%S')"
+filename="base_$now".gz
+backupfolder="/root/backupdb/"
+fullpathbackupfile="$backupfolder/$filename"
+logfile="$backupfolder/"base_log_"$(date +'%Y_%m')".txt
+echo "mysqldump started at $(date +'%d-%m-%Y %H:%M:%S')" >> "$logfile"
+mysqldump --user=$username --password=$password $database > $fullpathbackupfile
+echo "mysqldump finished at $(date +'%d-%m-%Y %H:%M:%S')" >> "$logfile"
+
+echo "remove backup 5 days old" >> "$logfile"
+# Delete files older than 5 days
+find $backupfolder=/* -mtime +5 -exec rm {} \;
+echo "complete removing" >> "$logfile"
+exit 0
+#sudo chmod +x db.sh
+#sudo ./db.sh
+```
+- Instalacion de cronie para el crontab , se ejecute automaticamente cada dia a las 9 am.
+```
+yum install cronie
+```
+- Ahora con el siguiente abremos crontab
+```
+export VISUAL=nano; crontab -e
+```
+- Colocamos dentro la siguiente linea, recuerda el directorio es donde esta el script db.sh
+```
+* 9 * * * /root/backupdb/db.sh
+```
 
 # Copyright
 
