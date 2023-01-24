@@ -333,13 +333,13 @@ systemctl start radiusd
 
 # Respaldar directorio /var/www/html/daloradius
 ```
-cd /var/www/html
-tar -zcvf daloradius.tar.gz daloradius
+cd /var/www/html/daloradius
+tar -cvpzf daloradius.tar .
 ```
 * Descomprimir con
 ```
-cd /var/www/html
-tar -xf daloradius.tar.gz
+cd /var/www/html/daloradius
+tar -xvf daloradius.tar
 ```
 * Acceso por medio de la interfaz web a daloradius
 ```
