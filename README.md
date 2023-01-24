@@ -192,7 +192,7 @@ cp /etc/raddb/mods-available/sql /etc/raddb/mods-available/sql.bk
 ```
 * Para remplazar los archivos por los del tutorial, debemos descargar una carpeta que los contiene 
 ```
-git clone git@github.com:apwifimx/daloup.git
+git clone git@github.com:wirisp/daloup.git
 ```
 * Remplazamos el archivo *sql* 
 ```
@@ -207,10 +207,6 @@ systemctl restart radiusd
 
 ```
 git clone git@github.com:apwifimx/daloradius.git
-```
-* Descomprimimos con
-```
-tar -xf daloradius.tar.gz
 ```
 * Entramos a la carpeta
 ```
@@ -330,16 +326,15 @@ systemctl stop radiusd
 radiusd -X
 systemctl start radiusd
 ```
-
 # Respaldar directorio /var/www/html/daloradius
 ```
-cd /var/www/html
-tar -zcvf daloradius.tar.gz daloradius
+cd /var/www/html/daloradius/
+tar -cvpzf daloradius.tar .
 ```
 * Descomprimir con
 ```
-cd /var/www/html
-tar -xf daloradius.tar.gz
+cd /var/www/html/daloradius
+tar -xvf daloradius.tar
 ```
 * Acceso por medio de la interfaz web a daloradius
 ```
@@ -506,7 +501,7 @@ export VISUAL=nano; crontab -e
 ```
 - Colocamos dentro la siguiente linea, recuerda el directorio es donde esta el script db.sh
 ```
-* 9 * * * /root/backupdb/db.sh
+5 10 * * * /root/backupdb/db.sh
 ```
 
 # Copyright
