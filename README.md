@@ -547,7 +547,7 @@ exit 0
 #sudo chmod +x db.sh
 #sudo ./db.sh
 ```
-- Instalacion de cronie para el crontab , se ejecute automaticamente cada dia a las 9 am.
+- Instalacion de cronie para el crontab , se ejecute automaticamente cada dia a las 10.05 am.
 ```
 dnf install cronie -y
 ```
@@ -555,7 +555,7 @@ dnf install cronie -y
 ```
 export VISUAL=nano; crontab -e
 ```
-- Colocamos dentro la siguiente linea, recuerda el directorio es donde esta el script db.sh
+- Colocamos dentro la siguiente linea (10.05 am.), recuerda el directorio es donde esta el script db.sh
 ```
 5 10 * * * /root/backupdb/db.sh
 ```
