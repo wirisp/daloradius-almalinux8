@@ -46,16 +46,27 @@ Thanks goes to these wonderful people :
 - Acceso por Mysql Workbench a la base de datos y exportacion de un lote de fichas a excel.
 - Impresion del lote de fichas importadas desde Mysql Workbench -->excel--> Access.
 - Contraseña usada en este tutorial para root,mysql y archivo daloradius.conf.php es *84Uniq@*.
-
+# Selenux permisive
+```
+sudo su
+```
+```
+setenforce 0
+sed -i 's/^SELINUX=.*/SELINUX=permissive/g' /etc/selinux/config
+```
 # Acceso root con usuario y contraseña en instancia AWS.
 
  * Instalamos nano
  ```
- sudo yum install nano
+dnf makecache --refresh
+ ```
+ ```
+dnf install nano -y
  ```
  * En el archivo **/etc/cloud/cloud.cfg** agregar el usuario *root*
+ 
  ```
- nano /etc/cloud/cloud.cfg
+ sudo nano /etc/cloud/cloud.cfg
  ```
  *Agregamos el usuario root*
  ```
@@ -67,6 +78,8 @@ Thanks goes to these wonderful people :
  ```
  disable_root: false
  ssh_pwauth:   true
+ #disable_root: 1
+ #ssh_pwauth:   0
  ```
  _En ocasiones hay un numero 0 ,1, significa `0=true` y `1=false`._
 ## Cambio del puerto 22 a 6813 
@@ -77,8 +90,8 @@ nano /etc/ssh/sshd_config
 *Modificamos el archivo a:*
 ```
 Port 6813 
-PasswordAuthentication yes
 PermitRootLogin yes
+PasswordAuthentication yes
 ```
 ## Reglas de firewall para el puerto 6813
 * Instalacion paquete necesario firewalld
@@ -105,37 +118,43 @@ systemctl restart sshd
 ```
 
 * Colocarle contraseña al usuario root
-```
-sudo su
-```
+
 ```
 passwd root
 ```
 ```
 sudo service sshd restart
+#Salir con
+exit
+exit
 ```
-* Ingresar desde el PC con
+* Ingresar desde terminal  con
 ```
 ssh -p6813 root@IP
 ```
 * Borrar la parte de la ssh que no se usara ,todo antes de ssh-rsa de la clave ssh `no-port-forwarding,no-agent-forwarding,no-X11-forwarding,command="echo 'Please login as the user \"opc\" rather than the user \"root\".';echo;sleep 10;exit 142"`, ya que eso impide el acceso por ssh con la clave de acceso.
 ```
+sudo su
+```
+```
 cd /root/.ssh
-nano autorized_keys
+nano authorized_keys
 ```
 * Guardar y reiniciar con
 ```
 sudo service sshd restart
 ```
-
+* Ahora podemos ingresar por ssh o por ip
+Cambiamos los datos de la terminal por ssh entrar en el puerto `6813` en lugar del 22 y con usuario `root`
 
 ## Actualizacion, selinux permisivo y paquetes a instalar
+```language
+sudo su
 ```
-sudo dnf makecache --refresh
 ```
+dnf makecache --refresh
 ```
-dnf update -y
-```
+
 - Le damos `reboot` a la maquina
 ## Eliminacion de kernel sin uso para liberar memoria en filesystem
 - Saber mi kernel actual usado
@@ -161,7 +180,7 @@ kernel-core-4.18.0-425.10.1.el8_7.x86_64
 
 
 - Para eliminar los pasados y dejar solo aquellos que tengan `4.18.0-372.9.1.el8.x86_64` en mi caso ,de los 2 que tengo es el antiguo no usado
-` entonces mi comando quedara.
+ entonces mi comando quedara.
 ```
 rpm -e kernel-4.18.0-372.9.1.el8.x86_64 kernel-modules-4.18.0-372.9.1.el8.x86_64 kernel-core-4.18.0-372.9.1.el8.x86_64
 ```
@@ -174,7 +193,7 @@ dnf install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm
 ```
 * Instalacion de modulos php,httpd,cli,curl....
 ```
-dnf module enable php:remi-7.4
+dnf module enable php:remi-7.4 -y
 ```
 ```
 dnf -y install @httpd @php
@@ -186,11 +205,9 @@ dnf -y install php-{cli,curl,mysqlnd,devel,gd,pear,mbstring,xml,pear}
 dnf install firewalld -y
 ```
 * Instalacion de PEAR, DB y MDB2
+
 ```
-sudo dnf makecache --refresh
-```
-```
-sudo dnf -y install php-pear
+dnf -y install php-pear
 ```
 ```
 sudo pear install DB
@@ -216,7 +233,7 @@ systemctl enable --now mariadb
 ```
 mysql_secure_installation
 # enter
-# acceso remoto --- > n
+# Disallow root login remotely? [Y/n] n
 # password usada aqui es 84Uniq@
 ```
 * creacion de db aqui la contraseña que use es *84Uniq@* procura cambiarla
@@ -241,10 +258,7 @@ mysql -u root -p radius < /etc/raddb/mods-config/sql/main/mysql/schema.sql
 ```
 ln -s /etc/raddb/mods-available/sql /etc/raddb/mods-enabled/
 ```
-* Creamos un backup del sql ya que lo remplazaremos por el que ya tengo, igualmente puedes usarlo y modificar los datos como el mio.
-```
-cp /etc/raddb/mods-available/sql /etc/raddb/mods-available/sql.bk
-```
+
 * Para remplazar los archivos por los del tutorial, debemos descargar una carpeta que los contiene
 ```
 dnf install -y git
@@ -252,12 +266,11 @@ dnf install -y git
 ```
 git clone https://github.com/wirisp/daloup.git
 ```
-* Remplazamos el archivo *sql* , cambiale la contraseña usada `84Uniq@` por la tuya
-```
-nano /root/daloup/sql
-```
+* Remplazamos el archivo *sql* , cambiale la contraseña usada password= `84Uniq@` por la tuya
+
 ```
 \mv /root/daloup/sql /etc/raddb/mods-available/sql
+nano /etc/raddb/mods-available/sql
 ```
 * Aplicamos permisos y reiniciamos servicio
 ```
@@ -332,43 +345,35 @@ touch /tmp/daloradius.log
 ```
 * el archivo radiusd.conf , yo le hare backup y colocare el mio
 ```
-cp /etc/raddb/radiusd.conf /etc/raddb/radiusd.conf.bk
 \mv /root/daloup/radiusd.conf /etc/raddb/radiusd.conf
 ```
 * Modificamos el archivo /etc/raddb/sites-enabled/default  yo le colocare el que descargue
 ```
-cp /etc/raddb/sites-enabled/default /etc/raddb/sites-enabled/default.bk
 \mv /root/daloup/default /etc/raddb/sites-enabled/default
 ```
 
 * Modificamos el archivo  /etc/raddb/mods-available/sqlcounter ,yo le pondre el que descargue.
 ```
-cp /etc/raddb/mods-available/sqlcounter /etc/raddb/mods-available/sqlcounter.bk
 \mv /root/daloup/sqlcounter /etc/raddb/mods-available/sqlcounter
 ```
 * Modificar el archivo /etc/raddb/mods-config/sql/counter/mysql/access_period.conf o colocarle el que he subido
 ```
-cp /etc/raddb/mods-config/sql/counter/mysql/access_period.conf /etc/raddb/mods-config/sql/counter/mysql/access_period.conf.bk
 \mv /root/daloup/access_period.conf /etc/raddb/mods-config/sql/counter/mysql/access_period.conf
 ```
 * Modificar el archivo /etc/raddb/mods-config/sql/counter/mysql/quotalimit.conf o colocarle el descargado
 ```
-cp /etc/raddb/mods-config/sql/counter/mysql/quotalimit.conf /etc/raddb/mods-config/sql/counter/mysql/quotalimit.conf.bk
 \mv /root/daloup/quotalimit.conf /etc/raddb/mods-config/sql/counter/mysql/quotalimit.conf
 ```
 * Modificar el archivo /etc/raddb/mods-enabled/radutmp o pasarle el descargado...
 ```
-cp /etc/raddb/mods-enabled/radutmp /etc/raddb/mods-enabled/radutmp.bk
 \mv /root/daloup/radutmp /etc/raddb/mods-enabled/radutmp
 ```
 * Modificar el archivo  /etc/raddb/mods-config/sql/main/mysql/queries.conf o colocarle el descargado
 ```
-cp /etc/raddb/mods-config/sql/main/mysql/queries.conf /etc/raddb/mods-config/sql/main/mysql/queries.conf.bk
 \mv /root/daloup/queries.conf /etc/raddb/mods-config/sql/main/mysql/queries.conf
 ```
 * Modificar el archivo php.conf o enviar el propio
 ```
-cp /etc/httpd/conf.d/php.conf /etc/httpd/conf.d/php.conf.bk
 \mv /root/daloup/php.conf /etc/httpd/conf.d/php.conf
 ```
 * En radius.service comentar *ExecStartPre=-/bin/sh /etc/raddb/certs/bootstrap* colocarle un #
@@ -381,15 +386,17 @@ cd daloup
 ```
 * Enviar sql descargado importante
 ```
-mysql -u root -p radius < base.sql
+mysql -u root -p radius < /root/daloup/base.sql
 ```
 * Iniciar servicio
 ```
-systemctl status radiusd
-systemctl start radiusd
+systemctl stop radiusd
 systemctl daemon-reload
 systemctl start radiusd
+systemctl status radiusd
 ```
+* Reiniciar sistema completo 
+acceder desde IP/daloradius con usuario `administrator` y password `radius`
 * Para analisis puede usar
 ```
 systemctl status radiusd
