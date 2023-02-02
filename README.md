@@ -157,6 +157,7 @@ dnf makecache --refresh
 
 - Le damos `reboot` a la maquina
 
+
 ## Preparacion de equipo y repositorios
 ```
 setenforce 0
@@ -359,7 +360,7 @@ cd daloup
 ```
 * Enviar sql descargado importante
 ```
-mysql -u root -p radius < /root/daloup/base.sql
+mysql -p -u root radius < /root/daloup/base.sql
 ```
 * Iniciar servicio
 ```
@@ -507,11 +508,13 @@ where id in (26)
 
 # BACKUP BASE DE DATOS MANUALMENTE
 ```
-mysqldump -u root -p radius > base.sql
+#backup db
+mysqldump -p -u root radius > dbname.sql
 ```
 ### RESTAURAR BASE DE DATOS
 ```
-mysql -u root -p radius < base.sql
+#Restaurar
+mysql -p -u root radius < dbname.sql
 ```
 # BACKUP BASE DE DATOS AUTOMATICO Y CRONTAB
 suponiendo que la carpeta es /root/backupdb/db.sh
