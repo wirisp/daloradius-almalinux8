@@ -32,7 +32,7 @@ Thanks goes to these wonderful people :
 	</tr></table>
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-# Instalacion de daloradius en Almalinux/Rocky optare por Almalinux en AWS
+# Instalacion de daloradius en Almalinux
 - Se necesita un vps con Almalinux instalado
 - Access para impresion de fichas
 - Mysql Workbench para checar tiempos y exportar las fichas/vouchers a excel
