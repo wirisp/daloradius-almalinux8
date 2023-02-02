@@ -54,7 +54,7 @@ sudo su
 setenforce 0
 sed -i 's/^SELINUX=.*/SELINUX=permissive/g' /etc/selinux/config
 ```
-# Acceso root con usuario y contraseña en instancia AWS.
+# Acceso root con usuario y contraseña en instancia.
 
  * Instalamos nano
  ```
