@@ -179,6 +179,7 @@ dnf -y install @httpd @php
 ```
 dnf -y install php-{cli,curl,mysqlnd,devel,gd,pear,mbstring,xml,pear}
 ```
+```
 dnf install firewalld -y
 ```
 * Instalacion de PEAR, DB y MDB2
