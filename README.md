@@ -209,13 +209,14 @@ firewall-cmd --reload
 ```
 * Instalacion y activacion de servicio Mariadb
 ```
-dnf module install mariadb
+dnf module install mariadb -y
 systemctl enable --now mariadb
 ```
 * Agregar contraseña a Mysql, cuando pregunte si se dea permitir remotamente colocar *y* de yes, la contraseña usada en este tutorial es *84Uniq@*.
 ```
 mysql_secure_installation
-# acceso remoto --- > y
+# enter
+# acceso remoto --- > n
 # password usada aqui es 84Uniq@
 ```
 * creacion de db aqui la contraseña que use es *84Uniq@* procura cambiarla
@@ -233,18 +234,28 @@ dnf install -y @freeradius freeradius-utils freeradius-mysql
 ```
 ```
 systemctl enable --now radiusd
+```
+```
 mysql -u root -p radius < /etc/raddb/mods-config/sql/main/mysql/schema.sql
+```
+```
 ln -s /etc/raddb/mods-available/sql /etc/raddb/mods-enabled/
 ```
 * Creamos un backup del sql ya que lo remplazaremos por el que ya tengo, igualmente puedes usarlo y modificar los datos como el mio.
 ```
 cp /etc/raddb/mods-available/sql /etc/raddb/mods-available/sql.bk
 ```
-* Para remplazar los archivos por los del tutorial, debemos descargar una carpeta que los contiene 
+* Para remplazar los archivos por los del tutorial, debemos descargar una carpeta que los contiene
 ```
-git clone git@github.com:wirisp/daloup.git
+dnf install -y git
 ```
-* Remplazamos el archivo *sql* 
+```
+git clone https://github.com/wirisp/daloup.git
+```
+* Remplazamos el archivo *sql* , cambiale la contraseña usada `84Uniq@` por la tuya
+```
+nano /root/daloup/sql
+```
 ```
 \mv /root/daloup/sql /etc/raddb/mods-available/sql
 ```
@@ -256,7 +267,7 @@ systemctl restart radiusd
 # Instalacion y configuracion de Daloradius
 
 ```
-git clone git@github.com:wirisp/daloradius.git
+git clone https://github.com/wirisp/daloradius.git
 ```
 * Entramos a la carpeta
 ```
@@ -282,6 +293,10 @@ mv daloradius /var/www/html/
 ```
 \mv /root/daloup/daloradius.conf.php /var/www/html/daloradius/library/daloradius.conf.php
 ```
+* cambiamos el password `84Uniq@`
+```
+nano /var/www/html/daloradius/library/daloradius.conf.php
+```
 * Aplicamos permisos y reiniciamos servicio
 ```
 chown -R apache:apache /var/www/html/daloradius/
@@ -291,6 +306,8 @@ systemctl restart radiusd.service httpd
 * Cambiar el timezone al que usaremos, tambien instalamos chrony
 ```
 dnf install chrony -y
+```
+```
 systemctl enable --now chronyd
 firewall-cmd --permanent --add-service=ntp
 firewall-cmd --reload
@@ -299,6 +316,8 @@ timedatectl set-timezone America/Mexico_City
 * Instalamos php-dba y policycoreutils
 ```
 dnf install -y policycoreutils-python-utils
+```
+```
 semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/daloradius(/.*)?"
 restorecon -Rv /var/www/html/daloradius
 dnf -y install php-dba
@@ -367,6 +386,8 @@ mysql -u root -p radius < base.sql
 * Iniciar servicio
 ```
 systemctl status radiusd
+systemctl start radiusd
+systemctl daemon-reload
 systemctl start radiusd
 ```
 * Para analisis puede usar
