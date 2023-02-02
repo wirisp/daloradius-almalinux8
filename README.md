@@ -68,7 +68,7 @@ Thanks goes to these wonderful people :
  disable_root: false
  ssh_pwauth:   true
  ```
- _En ocasiones hay un numero 1 ,0, significa `1=true` y `0=false`._
+ _En ocasiones hay un numero 0 ,1, significa `0=true` y `1=false`._
 ## Cambio del puerto 22 a 6813 
 * Editar el archivo */etc/ssh/sshd_config* y colocar/modificar las lineas a:
 ```
