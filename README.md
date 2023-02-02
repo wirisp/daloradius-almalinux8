@@ -127,13 +127,15 @@ nano autorized_keys
 ```
 sudo service sshd restart
 ```
-# Opcional eliminacion de kernel antiguo para liberar espacio en filesystem.
-```
-package-cleanup --oldkernels --count=1
-```
+
+
 # Actualizacion, selinux permisivo y paquetes a instalar
 ```
 dnf update
+```
+package-cleanup --oldkernels --count=1
+```
+```
 setenforce 0
 sed -i 's/^SELINUX=.*/SELINUX=permissive/g' /etc/selinux/config
 dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
