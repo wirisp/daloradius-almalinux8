@@ -68,6 +68,7 @@ Thanks goes to these wonderful people :
  disable_root: false
  ssh_pwauth:   true
  ```
+ _En ocasiones hay un numero 1 ,0, significa `1=true` y `0=false`._
 ## Cambio del puerto 22 a 6813 
 * Editar el archivo */etc/ssh/sshd_config* y colocar/modificar las lineas a:
 ```
@@ -106,16 +107,20 @@ systemctl restart sshd
 * Colocarle contraseña al usuario root
 ```
 sudo su
+```
+```
 passwd root
+```
+```
 sudo service sshd restart
 ```
 * Ingresar desde el PC con
 ```
 ssh -p6813 root@IP
 ```
-* Borrar la parte de la ssh que no se usara ,todo antes de ssh-rsa de la clave ssh, ya que eso impide el acceso por ssh con la clave de acceso.
+* Borrar la parte de la ssh que no se usara ,todo antes de ssh-rsa de la clave ssh `no-port-forwarding,no-agent-forwarding,no-X11-forwarding,command="echo 'Please login as the user \"opc\" rather than the user \"root\".';echo;sleep 10;exit 142"`, ya que eso impide el acceso por ssh con la clave de acceso.
 ```
-cd .ssh
+cd /root/.ssh
 nano autorized_keys
 ```
 * Guardar y reiniciar con
