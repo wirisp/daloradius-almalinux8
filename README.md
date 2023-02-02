@@ -46,7 +46,7 @@ Thanks goes to these wonderful people :
 - Acceso por Mysql Workbench a la base de datos y exportacion de un lote de fichas a excel.
 - Impresion del lote de fichas importadas desde Mysql Workbench -->excel--> Access.
 - Contraseña usada en este tutorial para root,mysql y archivo daloradius.conf.php es *84Uniq@*.
-# Selenux permisive
+# Selinux permisive
 ```
 sudo su
 ```
