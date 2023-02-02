@@ -346,9 +346,10 @@ touch /tmp/daloradius.log
 ```
 \mv /root/daloup/queries.conf /etc/raddb/mods-config/sql/main/mysql/queries.conf
 ```
-* Modificar el archivo php.conf o enviar el propio
+* Modificar el archivo php.conf o enviar el propio,tambien el index.php
 ```
 \mv /root/daloup/php.conf /etc/httpd/conf.d/php.conf
+\mv /root/daloup/index.html /var/www/html/index/html
 ```
 * En radius.service comentar *ExecStartPre=-/bin/sh /etc/raddb/certs/bootstrap* colocarle un #
 ```
