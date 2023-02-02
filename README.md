@@ -549,7 +549,7 @@ exit 0
 ```
 - Instalacion de cronie para el crontab , se ejecute automaticamente cada dia a las 9 am.
 ```
-yum install cronie
+dnf install cronie -y
 ```
 - Ahora con el siguiente abremos crontab
 ```
