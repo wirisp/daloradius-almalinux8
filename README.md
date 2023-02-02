@@ -156,34 +156,7 @@ dnf makecache --refresh
 ```
 
 - Le damos `reboot` a la maquina
-## Eliminacion de kernel sin uso para liberar memoria en filesystem
-- Saber mi kernel actual usado
-```
-uname -r
-```
-El mio es `4.18.0-372.9.1.el8.x86_64` 
-- Listar kernels totales
-```
-rpm -qa | grep kernel
-```
-Dara una salida parecida a esta
 
-
-kernel-tools-libs-4.18.0-425.10.1.el8_7.x86_64
-kernel-4.18.0-425.10.1.el8_7.x86_64
-kernel-core-4.18.0-372.9.1.el8.x86_64
-kernel-modules-4.18.0-372.9.1.el8.x86_64
-kernel-tools-4.18.0-425.10.1.el8_7.x86_64
-kernel-modules-4.18.0-425.10.1.el8_7.x86_64
-kernel-4.18.0-372.9.1.el8.x86_64
-kernel-core-4.18.0-425.10.1.el8_7.x86_64
-
-
-- Para eliminar los pasados y dejar solo aquellos que tengan `4.18.0-372.9.1.el8.x86_64` en mi caso ,de los 2 que tengo es el antiguo no usado
- entonces mi comando quedara.
-```
-rpm -e kernel-4.18.0-372.9.1.el8.x86_64 kernel-modules-4.18.0-372.9.1.el8.x86_64 kernel-core-4.18.0-372.9.1.el8.x86_64
-```
 ## Preparacion de equipo y repositorios
 ```
 setenforce 0
