@@ -131,6 +131,9 @@ sudo service sshd restart
 
 ## Actualizacion, selinux permisivo y paquetes a instalar
 ```
+sudo dnf makecache --refresh
+```
+```
 dnf update -y
 ```
 - Le damos `reboot` a la maquina
@@ -183,6 +186,12 @@ dnf -y install php-{cli,curl,mysqlnd,devel,gd,pear,mbstring,xml,pear}
 dnf install firewalld -y
 ```
 * Instalacion de PEAR, DB y MDB2
+```
+sudo dnf makecache --refresh
+```
+```
+sudo dnf -y install php-pear
+```
 ```
 sudo pear install DB
 sudo pear install MDB2
