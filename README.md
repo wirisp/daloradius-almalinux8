@@ -379,6 +379,7 @@ systemctl stop radiusd
 radiusd -X
 systemctl start radiusd
 ```
+_Es necesario que se abran los puertos en el vps de administracion `1812,1813,3306,6813,80,8080,443`_
 # Respaldar directorio /var/www/html/daloradius
 ```
 cd /var/www/html/daloradius/
