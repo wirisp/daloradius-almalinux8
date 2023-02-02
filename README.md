@@ -133,6 +133,7 @@ sudo service sshd restart
 ```
 dnf update
 ```
+```
 package-cleanup --oldkernels --count=1
 ```
 ```
