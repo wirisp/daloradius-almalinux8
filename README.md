@@ -86,6 +86,9 @@ dnf install nano -y
 * Editar el archivo */etc/ssh/sshd_config* y colocar/modificar las lineas a:
 ```
 nano /etc/ssh/sshd_config
+sudo su
+passwd root
+# 84River@B
 ```
 *Modificamos el archivo a:*
 ```
