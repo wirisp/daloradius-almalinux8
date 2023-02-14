@@ -521,6 +521,7 @@ mysqldump -p -u root radius > dbname.sql
 #Restaurar
 mysql -p -u root radius < dbname.sql
 ```
+Ve a Ip/daloradius y cambia el **password del NAS**, despues reinicia el servicio o reinicia la maquina, para que surta efecto.
 # BACKUP BASE DE DATOS AUTOMATICO Y CRONTAB
 suponiendo que la carpeta es /root/backupdb/db.sh
 ```
