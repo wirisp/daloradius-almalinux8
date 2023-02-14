@@ -564,9 +564,18 @@ export VISUAL=nano; crontab -e
 5 10 * * * /root/backupdb/db.sh
 ```
 # COMANDOS EXTRAS
-Buscar texto dentro de archivos
+### Buscar texto dentro de archivos
 ```
 grep -rl "texto aqui" /etc
+```
+### Eliminar todo el texto o la info del document.txt
+```
+echo > document.txt
+```
+### Copiar o mover todo al nuevo archivo,sin pedir confirmacion
+```
+\mv document.txt /var/www/html/document.txt
+\cp -r document.txt /var/www/html/document.txt
 ```
 # Copyright
 
