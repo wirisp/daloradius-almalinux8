@@ -563,7 +563,11 @@ export VISUAL=nano; crontab -e
 ```
 5 10 * * * /root/backupdb/db.sh
 ```
-
+# COMANDOS EXTRAS
+Buscar texto dentro de archivos
+```
+grep -rl "texto aqui" /etc
+```
 # Copyright
 
 Copyright Liran Tal 2007-2019. All rights reserved.
