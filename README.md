@@ -358,7 +358,7 @@ touch /tmp/daloradius.log
 * Modificar el archivo php.conf o enviar el propio,tambien el index.php
 ```
 \mv /root/daloup/php.conf /etc/httpd/conf.d/php.conf
-\mv /root/daloup/index.html /var/www/html/index/html
+\mv /root/daloup/index.php /var/www/html/index.php
 ```
 * En radius.service comentar *ExecStartPre=-/bin/sh /etc/raddb/certs/bootstrap* colocarle un #
 ```
