@@ -106,6 +106,11 @@ dnf install firewalld -y
 systemctl enable --now firewalld
 ```
 * Puerto a abrir 6813
+
+```
+dnf install -y policycoreutils-python-utils
+```
+Despues
 ```
 semanage port -a -t ssh_port_t -p tcp 6813
 firewall-cmd --zone=public --add-port=6813/tcp --permanent
