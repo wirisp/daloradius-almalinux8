@@ -290,9 +290,6 @@ mv daloradius /var/www/html/
 * Copiamos uno de los archivos que descargamos, recuerda cambiarle el password por el tuyo el usado en este archivo es *84Uniq@*.
 ```
 \mv /root/daloup/daloradius.conf.php /var/www/html/daloradius/library/daloradius.conf.php
-```
-* cambiamos el password `84Uniq@`
-```
 nano /var/www/html/daloradius/library/daloradius.conf.php
 ```
 * Aplicamos permisos y reiniciamos servicio
@@ -309,6 +306,7 @@ dnf install chrony -y
 systemctl enable --now chronyd
 firewall-cmd --permanent --add-service=ntp
 firewall-cmd --reload
+#Para mi es America/Mexico_City
 timedatectl set-timezone America/Mexico_City
 ```
 * Instalamos php-dba y policycoreutils
