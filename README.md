@@ -214,7 +214,7 @@ firewall-cmd --reload
 dnf module install mariadb -y
 systemctl enable --now mariadb
 ```
-* Agregar contraseña a Mysql, cuando pregunte si se dea permitir remotamente colocar *y* de yes, la contraseña usada en este tutorial es *84Uniq@*.
+* Agregar contraseña a Mysql, cuando pregunte si se desea desactivar remotamente colocar *n* de no, la contraseña usada en este tutorial es *84Uniq@*.
 ```
 mysql_secure_installation
 # enter
