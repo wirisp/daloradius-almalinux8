@@ -32,7 +32,7 @@ Thanks goes to these wonderful people :
 	</tr></table>
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-# Instalacion de daloradius en Almalinux
+# Instalacion de daloradius en Almalinux 8
 - Se necesita un vps con Almalinux instalado
 - Access para impresion de fichas
 - Mysql Workbench para checar tiempos y exportar las fichas/vouchers a excel
@@ -63,7 +63,7 @@ dnf makecache --refresh
  ```
 dnf install nano -y
  ```
- * En el archivo **/etc/cloud/cloud.cfg** agregar el usuario *root*
+ * En el archivo **/etc/cloud/cloud.cfg** agregar el usuario *root* (este archivo esta disponible en algunas instancias ,omitir si no)
  
  ```
  sudo nano /etc/cloud/cloud.cfg
@@ -86,15 +86,18 @@ dnf install nano -y
 * Editar el archivo */etc/ssh/sshd_config* y colocar/modificar las lineas a:
 ```
 nano /etc/ssh/sshd_config
-sudo su
-passwd root
-# 84River@B
 ```
 *Modificamos el archivo a:*
 ```
 Port 6813 
 PermitRootLogin yes
 PasswordAuthentication yes
+```
+- Cambiamos el password del root
+```
+sudo su
+passwd root
+# 84River@B
 ```
 ## Reglas de firewall para el puerto 6813
 * Instalacion paquete necesario firewalld
