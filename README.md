@@ -370,7 +370,7 @@ cd daloup
 ```
 * Enviar sql descargado importante
 ```
-mysql -p -u root radius < /root/daloup/base.sql
+mysql -p -u root radius < /root/daloup/dbname.sql
 ```
 * Iniciar servicio
 ```
