@@ -97,7 +97,7 @@ PasswordAuthentication yes
 ```
 sudo su
 passwd root
-# 84River@B
+# 84Uniq@
 ```
 ## Reglas de firewall para el puerto 6813
 * Instalacion paquete necesario firewalld
