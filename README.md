@@ -380,7 +380,7 @@ systemctl start radiusd
 systemctl status radiusd
 ```
 * Reiniciar sistema completo 
-acceder desde IP/daloradius con usuario `administrator` y password `radius`
+acceder desde IP/daloradius con usuario `administrator` y password `radius` o `84Uniq@`
 * Para analisis puede usar
 ```
 systemctl status radiusd
