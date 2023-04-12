@@ -34,10 +34,10 @@ Thanks goes to these wonderful people :
 
 # Instalacion de daloradius en Almalinux 8
 - Se necesita un vps con Almalinux instalado
-- Access para impresion de fichas
-- Mysql Workbench para checar tiempos y exportar las fichas/vouchers a excel
-	-  Se realizara una instalacion limpia en almalinux, si la instancia se conecta por ssh solamente, se le otorgara acceso por usuario/contraseña root para poder administrar desde Mysql Workbench la base de datos y exportarla a excel. (Access y Mysql workbench se usa para checar los usuarios en tiempos e imprimir las fichas/vouchers)
--En este tutoria se utilizara en vez del puerto 22 el puerto 6813 para acceso por ssh, por lo que debera abrirse en la administracion del vps, aunque alternativamente puedes usar el 22 solamente ignora la parte del cambio de puerto.
+- Access para impresion de fichas, **no necesario**, puedes usar `https://github.com/wirisp/printdalo` en el mismo servidor.
+- Mysql Workbench para checar tiempos y exportar las fichas/vouchers a excel , **no necesario**, si utilizas directamente `https://github.com/wirisp/printdalo`
+-  Se realizara una instalacion limpia en almalinux, si la instancia se conecta por ssh solamente, se le otorgara acceso por usuario/contraseña root para poder administrar desde Mysql Workbench la base de datos y exportarla a excel. (Access y Mysql workbench se usa para checar los usuarios en tiempos e imprimir las fichas/vouchers)
+-En este tutoria se utilizara en vez del puerto 22 el puerto 6813 para acceso por ssh, por lo que debera abrirse en la administracion del vps, aunque alternativamente puedes usar el 22 solamente ignora la parte del cambio de puerto.**puedes omitir el cambio de puerto**
 - Creacion de perfiles y planes tiempos ; Perfiles/grupos= manejo de tiempos de usuario, plan=costos del perfil o ficha individual,conteo.
 	- 2 Horas Pausadas
 	- 12 Horas Corridas
