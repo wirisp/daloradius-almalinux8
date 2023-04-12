@@ -537,6 +537,7 @@ nano db.sh
 ```
 - Dentro de el archivo db.sh introducir lo siguiente, cambiando tu usuario y contraseña.
 ```
+#! /bin/bash
 username=root
 password=84Uniq@
 database=radius
@@ -551,7 +552,7 @@ echo "mysqldump finished at $(date +'%d-%m-%Y %H:%M:%S')" >> "$logfile"
 
 echo "remove backup 5 days old" >> "$logfile"
 # Delete files older than 5 days
-find $backupfolder=/* -mtime +5 -exec rm {} \;
+find $backupfolder/* -mtime +5 -exec rm {} \;
 echo "complete removing" >> "$logfile"
 exit 0
 #sudo chmod +x db.sh
